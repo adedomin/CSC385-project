@@ -1,10 +1,24 @@
 var emailjs = require('emailjs')
 
-module.exports = function (users, config) {
+module.exports = function (users, config, validator) {
 
 	var email = emailjs.server.connect(config.email_config)
 	return {
 		signup: function (req, res, next) {
+
+			var result = validator.validate(req.body, '/user')
+
+			if (!result.valid) {
+				res.status(500)
+				res.send({
+					status: 'error',
+					msg: result.errors
+				})
+				
+				return
+			}
+
+			req.body.verified = false
 
 			users.insert(req.body, function (err,user) {
 				

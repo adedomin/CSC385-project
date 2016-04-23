@@ -17,6 +17,7 @@
     "decimal.js": "^5.0.8",
     "emailjs": "^1.0.4",
     "express": "^4.13.4",
+    "jsonschema": "^1.1.0",
     "mercury": "^14.1.0",
     "nedb": "^1.8.0",
     "rss": "^1.2.1"

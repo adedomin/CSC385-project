@@ -22,10 +22,13 @@ var nedb = require('nedb'),
 //		autoload: true
 //	})
 
+var Validator = require('jsonschema').Validator,
+	validator = new Validator(),
+	schemas = require('./schemas')
+
+validator.addSchema(schemas.user, '/user')
+signupController = SignupController(users, config, validator, schemas)
 users.ensureIndex({ fieldname: 'username', unique: true })
-
-signupController = SignupController(users, config)
-
 app.use(bodyParser.json())
 
 loginRoute.route(config.http_root+'signup')
