@@ -1,0 +1,24 @@
+{
+  "name": "CSC385-Project",
+  "version": "0.0.0",
+  "description": "eBanking Webapp for CSC 385 Project",
+  "main": "eBanking.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "CSC385"
+  ],
+  "author": "Anthony DeDominic.pw",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "async": "^2.0.0-rc.3",
+    "body-parser": "^1.15.0",
+    "decimal.js": "^5.0.8",
+    "emailjs": "^1.0.4",
+    "express": "^4.13.4",
+    "mercury": "^14.1.0",
+    "nedb": "^1.8.0",
+    "rss": "^1.2.1"
+  }
+}
