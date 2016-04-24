@@ -1,65 +1,52 @@
-module.exports = function (users, sessions, config, validator, hasher, crypto, email) {
-
+module.exports = function (helper) {
 	return {
 		
-		login: function (req, res) {
-
-			users.findOne({ username: req.body.username}, function (err, user) {
+		returnUser: function (req, res) {
+			
+			helper.getUser(req.session.value, function (err, user) {
 				
-				hasher(req.body.password).verifyAgainst(user.password, function (err, verified) {
-					
-					if (verified) {
-						
-						crypto.randomBytes(48, function (err, buffer) {
-							
-							var token = buffer.toString('hex')
-							sessions.insert({
-								token: token,
-								value: req.body.username,
-								created: Date.now()
-							})
-
-							res.cookie('session', token, { 
-								maxAge: 900000, 
-								httpOnly: true 
-							})
-							res.send({
-								status: 'ok',
-								msg: 'api-token: '+token
-							})
-						})
-					}
-				})
+				delete user.password
+				res.send(user)
 			})
 		},
-		verifyLogin: function (req, res, next) {
-
-			var sessionid
+		getUser: function (req, res) {
 			
-			if (req.cookie &&
-				req.cookie.session) {
+			if (!req.params || !req.params.username) {
 
-				sessionid = req.cookie.session
+				res.status(404)
+				res.send({
+					status: 'error',
+					msg: 'user not found'
+				})
+				return
 			}
-			else if (req.get('api-token')) {
-				
-				sessionid = req.get('api-token')
+
+			if (!(req.role && req.role === 'admin')) {
+				res.status(401)
+				res.send({
+					status: 'error',
+					msg: {
+						txt: 'you are not authorized to use this resource',
+						requireRole: 'admin',
+						requestersRole: req.role
+					}
+				})
+				return
 			}
-				
-			sessions.findOne({ token: sessionid }, function (err, session) {	
-				if (err || session === null) {
+
+			helper.getUser(req.params.username, function (err, user) {
+
+				if (err) {
 					
-					res.status(401)
+					res.status(404)
 					res.send({
 						status: 'error',
-						msg: 'no valid session found; please get a new cookie at path /login',
-						redirect: '/login'
+						msg: err
 					})
 					return
 				}
-
-				next()
-				return
+				delete user.password
+				res.send(user)
 			})
 		}
 	}
