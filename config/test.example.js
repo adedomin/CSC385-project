@@ -25,4 +25,11 @@ config.email_config = {
 // what you want the from field in your email to have
 config.email_from = 'your project name <your@email.tld>'
 
+config.db = {
+	users: './db/users.db',
+	sessions: './db/sessions.db',
+	accounts: './db/accounts.db',
+	history: './dbhistory.db'
+}
+
 module.exports = config
