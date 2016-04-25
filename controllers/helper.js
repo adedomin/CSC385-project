@@ -201,6 +201,24 @@ module.exports = function (users, sessions, accounts, transactions, email) {
 				next(null)
 			})
 		},
+		getTransactions: function (owner, next) {
+			
+			var query = {}
+			if (owner) {
+				query.owner = owner
+			}
+
+			transactions.find(query, function (err, transactions) {
+				
+				if (err || transactions === null) {
+					
+					next('no transactions found')
+					return
+				}
+
+				next(null, transactions)
+			})
+		},
 		addTransaction: function (transaction, next) {
 
 			transactions.insert(transaction, function (err, transaction) {
@@ -208,6 +226,19 @@ module.exports = function (users, sessions, accounts, transactions, email) {
 				if (err || transaction === null) {
 					
 					next('transaction not saved')
+					return
+				}
+
+				next(null, transaction)
+			})
+		},
+		removeTransaction: function (transactionId, owner, next) {
+		
+			transactions.remove({ _id: transactionId, owner: owner }, function (err, transaction) {
+			
+				if (err || transaction === null) {
+					
+					next('no such transaction')
 					return
 				}
 

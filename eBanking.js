@@ -45,10 +45,6 @@ sessions.ensureIndex({
 	expireAfterSeconds: 900000
 })
 transactions.ensureIndex({ fieldName: 'owner' })
-transactions.ensureIndex({ 
-	fieldName: 'startAt', 
-	expireAfterSeconds: 0
-})
 
 var Validator = require('jsonschema').Validator,
 	validator = new Validator(),
@@ -67,17 +63,11 @@ var accountController = AccountController(helperController)
 var transactionController 
 
 var TransactionsManager = require('./models/transactions-manager'),
-	transactionsManager
-	
-transactions.find({}, function (err, trans) {
-	
-	transactionsManager = new TransactionsManager(trans, function (ts) {
-		transactions.remove({ _id: ts._id })
-		console.log(ts)
+	transactionsManager = new TransactionsManager(helperController, function (ts) { 
+		console.log(ts) 
 	})
-	transactionController = TransactionController(helperController, transactionsManager)
-	apiRoute.post('/accounts/:acctId1/to/:acctId2', transactionController.addTransaction)
-})
+
+transactionController = TransactionController(transactionsManager, helperController)
 
 app.use(bodyParser.json())
 
@@ -109,6 +99,9 @@ apiRoute.get('/user/:username', userController.getUser)
 apiRoute.get('/accounts', accountController.getAccounts)
 apiRoute.get('/accounts/:accountid', accountController.getAccount)
 apiRoute.post('/accounts/new', accountController.newAccount)
+apiRoute.post('/accounts/:acctId1/to/:acctId2', transactionController.addTransaction)
+apiRoute.get('/transactions', transactionController.getTransactions)
+apiRoute.delete('/transactions/:transid', transactionController.removeTransaction)
 
 app.use(config.http_root+'api', apiRoute) 
 app.use(config.http_root+'login', loginRoute) 
