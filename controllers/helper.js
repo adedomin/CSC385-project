@@ -1,7 +1,7 @@
 var crypto = require('crypto'),
 	hasher = require('password-hash-and-salt')
 
-module.exports = function (users, sessions, accounts, email) {
+module.exports = function (users, sessions, accounts, transactions, email) {
 
 	return {
 		generateToken: function (next) {
@@ -145,6 +145,35 @@ module.exports = function (users, sessions, accounts, email) {
 				next(null, account)
 			})
 		},
+		checkAccountAccess: function (username, account) {
+
+			if (!account.acl) {
+				
+				return null
+			}
+
+			var acl = account.acl[username.replace('.', ':dot:')]
+
+			if (!acl) {
+				
+				return null
+			}
+
+			if (acl.indexOf('owner') !== -1) {
+				
+				return account
+			}
+
+			if (acl.indexOf('send') !== -1) {
+				
+				return {
+					name: account.name,
+					_id: account._id
+				}
+			}
+
+			return null
+		},
 		createAccount: function (account, next) {
 			
 			accounts.insert(account, function (err, account) {
@@ -170,6 +199,19 @@ module.exports = function (users, sessions, accounts, email) {
 				}
 
 				next(null)
+			})
+		},
+		addTransaction: function (transaction, next) {
+
+			transactions.insert(transaction, function (err, transaction) {
+				
+				if (err || transaction === null) {
+					
+					next('transaction not saved')
+					return
+				}
+
+				next(null, transaction)
 			})
 		},
 		checkPass: function (password, hash, next) {

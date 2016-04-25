@@ -71,6 +71,20 @@ module.exports = function (helper) {
 					return
 				}
 
+				account = helper.checkAccountAccess(
+					req.session.value, account
+				)
+
+				if (!account) {
+
+					res.status(401)
+					res.send({
+						status: 'error',
+						msg: 'not authorized to access'
+					})
+					return
+				}
+
 				res.send(account)
 			})
 		},
@@ -97,7 +111,13 @@ module.exports = function (helper) {
 								return
 							}
 
-							retrieved.push(account)
+							account = helper.checkAccountAccess(
+								req.session.value, account
+							)
+
+							if (account) {
+								retrieved.push(account)
+							}
 							next(null)
 						})
 					})
@@ -120,9 +140,6 @@ module.exports = function (helper) {
 					accounts: retrieved
 				})
 			})
-		},
-		transfer: function (req, res) {
-			
 		}
 	}
 }

@@ -10,6 +10,7 @@ var express = require('express'),
 	LoginController = require('./controllers/login'),
 	UserController = require('./controllers/user'),
 	AccountController = require('./controllers/account'),
+	TransactionController = require('./controllers/transactions'),
 	bodyParser = require('body-parser')
 
 var nedb = require('nedb'),
@@ -22,7 +23,11 @@ var nedb = require('nedb'),
 		autoload: true
 	}),
 	accounts = new nedb({
-		filename: './db/accounts.db',
+		filename: config.db.accounts,
+		autoload: true
+	})
+	transactions = new nedb({
+		filename: config.db.transactions,
 		autoload: true
 	})
 //	history = new nedb({
@@ -39,6 +44,11 @@ sessions.ensureIndex({
 	fieldName: 'created',
 	expireAfterSeconds: 900000
 })
+transactions.ensureIndex({ fieldName: 'owner' })
+transactions.ensureIndex({ 
+	fieldName: 'startAt', 
+	expireAfterSeconds: 0
+})
 
 var Validator = require('jsonschema').Validator,
 	validator = new Validator(),
@@ -49,11 +59,25 @@ validator.addSchema(schemas.user, '/user')
 var emailjs = require('emailjs'),
 	email = emailjs.server.connect(config.email_config)
 
-var helperController = HelperController(users, sessions, accounts, email)
+var helperController = HelperController(users, sessions, accounts, transactions, email)
 var signupController = SignupController(helperController, config, validator)
 var loginController = LoginController(helperController)
 var userController = UserController(helperController)
 var accountController = AccountController(helperController)
+var transactionController 
+
+var TransactionsManager = require('./models/transactions-manager'),
+	transactionsManager
+	
+transactions.find({}, function (err, trans) {
+	
+	transactionsManager = new TransactionsManager(trans, function (ts) {
+		transactions.remove({ _id: ts._id })
+		console.log(ts)
+	})
+	transactionController = TransactionController(helperController, transactionsManager)
+	apiRoute.post('/accounts/:acctId1/to/:acctId2', transactionController.addTransaction)
+})
 
 app.use(bodyParser.json())
 

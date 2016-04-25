@@ -29,6 +29,7 @@ config.db = {
 	users: './db/users.db',
 	sessions: './db/sessions.db',
 	accounts: './db/accounts.db',
+	transactions: './db/transactions.db',
 	history: './dbhistory.db'
 }
 

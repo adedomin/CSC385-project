@@ -4,8 +4,6 @@ var Accounts = function (owner, name, historyid) {
 	this.history = historyid
 	this.acl = {}
 	this.acl[owner] = [
-		'read',
-		'change',
 		'send',
 		'owner'
 	]
