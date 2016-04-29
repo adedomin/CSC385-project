@@ -57,7 +57,7 @@ module.exports = function (helper) {
 				}
 				
 				res.cookie('session', cookieToken, { 
-					maxAge: 900000, 
+					maxAge: 8.64e+7, 
 					httpOnly: true 
 				})
 
