@@ -73,10 +73,10 @@ module.exports = function (helper) {
 
 			var sessionid
 			
-			if (req.cookie &&
-				req.cookie.session) {
+			if (req.cookies &&
+				req.cookies.session) {
 
-				sessionid = req.cookie.session
+				sessionid = req.cookies.session
 			}
 			else if (req.get('api-token')) {
 				
@@ -89,7 +89,7 @@ module.exports = function (helper) {
 					
 					res.status(401)
 					res.send({
-						status: 'err',
+						status: 'error',
 						msg: 'no valid session found'
 					})
 					return				

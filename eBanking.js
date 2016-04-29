@@ -1,4 +1,7 @@
 var config = require('./config/test')
+			
+var async = require('async'),
+	Decimal = require('decimal.js')
 
 var express = require('express'),
 	app = express(),
@@ -11,7 +14,8 @@ var express = require('express'),
 	UserController = require('./controllers/user'),
 	AccountController = require('./controllers/account'),
 	TransactionController = require('./controllers/transactions'),
-	bodyParser = require('body-parser')
+	bodyParser = require('body-parser'),
+	cookieParser = require('cookie-parser')
 
 var nedb = require('nedb'),
 	users = new nedb({
@@ -63,13 +67,15 @@ var accountController = AccountController(helperController)
 var transactionController 
 
 var TransactionsManager = require('./models/transactions-manager'),
-	transactionsManager = new TransactionsManager(helperController, function (ts) { 
-		console.log(ts) 
-	})
+	transactionsProcessor = require('./models/transactions-processor')(helperController)
+	transactionsManager = new TransactionsManager(
+		helperController, transactionsProcessor
+	)
 
 transactionController = TransactionController(transactionsManager, helperController)
 
 app.use(bodyParser.json())
+app.use(cookieParser())
 
 loginRoute.route('/signup')
 	.post([
@@ -105,6 +111,7 @@ apiRoute.delete('/transactions/:transid', transactionController.removeTransactio
 
 app.use(config.http_root+'api', apiRoute) 
 app.use(config.http_root+'login', loginRoute) 
+app.use(config.http_root, staticRoute)
 
 app.get(config.http_root+'verify/:token', signupController.verify)
 

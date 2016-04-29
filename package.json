@@ -9,6 +9,7 @@
   "keywords": [
     "CSC385"
   ],
+  "repository": "https://github.com/adedomin/CSC385-project.git",
   "author": "Anthony DeDominic.pw",
   "license": "Apache-2.0",
   "dependencies": {
@@ -18,9 +19,9 @@
     "emailjs": "^1.0.4",
     "express": "^4.13.4",
     "jsonschema": "^1.1.0",
-    "mercury": "^14.1.0",
     "nedb": "^1.8.0",
     "password-hash-and-salt": "^0.1.3",
-    "rss": "^1.2.1"
+    "rss": "^1.2.1",
+    "yo-yo": "^1.2.0"
   }
 }

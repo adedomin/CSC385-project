@@ -1,5 +1,6 @@
 var crypto = require('crypto'),
-	hasher = require('password-hash-and-salt')
+	hasher = require('password-hash-and-salt'),
+	Decimal = require('decimal.js')
 
 module.exports = function (users, sessions, accounts, transactions, email) {
 
@@ -173,6 +174,23 @@ module.exports = function (users, sessions, accounts, transactions, email) {
 			}
 
 			return null
+		},
+		transferAccountBalance: function (to, from, change, next) {
+			
+			if (!to || !from || !change ) {
+				
+				next('no transaction')
+				return
+			}
+
+			change = new Decimal(change).toDP(2)
+			toChange = new Decimal(to.balance).plus(change)
+			fromChange = new Decimal(from.balance).minus(change)
+
+			accounts.update({ _id: to._id }, { $set: { balance: toChange.toFixed(2).toString() }}, {}, function(){})
+			accounts.update({ _id: from._id }, { $set: { balance: fromChange.toFixed(2).toString() }}, {}, function(){})
+
+			next(null)
 		},
 		createAccount: function (account, next) {
 			
