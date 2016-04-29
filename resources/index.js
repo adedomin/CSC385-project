@@ -363,6 +363,7 @@ var renderAccountSide = function (accts, rowSelect) {
 			<th>Name</th>
 			<th>Account Id</th>
 			<th>Balance</th>
+			<th></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -376,10 +377,12 @@ var renderAccountSide = function (accts, rowSelect) {
 			<td>${acct.name}</td>
 			<td>${acct._id}</td>
 			<td>${'$'+acct.balance}</td>
+			<td><a href='/api/history/${acct._id}'>history</a></td>
 		</tr>`
 	})}
 		<tr id="account" class='warning' onclick=${rowSelect}>
 			<td>New Account</td>
+			<td></td>
 			<td></td>
 			<td></td>
 		</tr>

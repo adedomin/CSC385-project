@@ -18,7 +18,7 @@ var crypto = require('crypto'),
 	hasher = require('password-hash-and-salt'),
 	Decimal = require('decimal.js')
 
-module.exports = function (users, sessions, accounts, transactions, email) {
+module.exports = function (users, sessions, accounts, transactions, history, email) {
 
 	return {
 		generateToken: function (next) {
@@ -193,6 +193,10 @@ module.exports = function (users, sessions, accounts, transactions, email) {
 		},
 		transferAccountBalance: function (to, from, change, next) {
 			
+			if (!next) {
+				next = function () {}
+			}
+
 			if (!to || !from || !change ) {
 				
 				next('no transaction')
@@ -203,8 +207,20 @@ module.exports = function (users, sessions, accounts, transactions, email) {
 			toChange = new Decimal(to.balance).plus(change)
 			fromChange = new Decimal(from.balance).minus(change)
 
-			accounts.update({ _id: to._id }, { $set: { balance: toChange.toFixed(2).toString() }}, {}, function(){})
-			accounts.update({ _id: from._id }, { $set: { balance: fromChange.toFixed(2).toString() }}, {}, function(){})
+			accounts.update({ _id: to._id }, { $set: { balance: toChange.toString() }}, {}, function(){})
+			accounts.update({ _id: from._id }, { $set: { balance: fromChange.toString() }}, {}, function(){})
+			history.insert([{ 
+				accountId: from._id,
+				changedBy: to._id,
+				amount: change.neg().toString(),
+				date: new Date()
+			},
+			{
+				accountId: to._id,
+				changedBy: from._id,
+				amount: change.toString(),
+				date: new Date()
+			}])
 
 			next(null)
 		},
@@ -320,6 +336,18 @@ module.exports = function (users, sessions, accounts, transactions, email) {
 				}
 
 				next(null, message)
+			})
+		},
+		getHistory: function(accountId, next) {
+			
+			history.find({ accountId: accountId }, function (err, histories) {
+				
+				if (err || !histories) {
+					next(null, [])
+					return
+				}
+
+				next(null, histories)
 			})
 		}
 	}

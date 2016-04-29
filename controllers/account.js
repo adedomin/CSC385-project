@@ -16,7 +16,8 @@ limitations under the License.
 
 var Account = require('../models/account'),
 	waterfall = require('async/waterfall'),
-	each = require('async/each')
+	each = require('async/each'),
+	RSS = require('rss')
 
 module.exports = function (helper) {
 
@@ -155,6 +156,36 @@ module.exports = function (helper) {
 				res.send({
 					accounts: retrieved
 				})
+			})
+		},
+		getHistory: function (req, res) {
+			
+			if (!req.params || !req.params.acccountid) {
+				res.status(500)
+				res.send({
+					status: 'error',
+					msg: 'no paramert given'
+				})
+			}
+
+			helper.getHistory(req.params.acccountid, function (err, histories) {
+				
+				var feed = new RSS({
+					title: 'Transactions History',
+					description: 'for '+req.params.acccountid,
+				})
+					
+				histories.forEach(function (history) {
+					feed.item({
+						title: history.changedBy,
+						description: 'amount: '+history.amount,
+						date: history.date,
+						guid: history._id
+					})
+				})
+
+				res.type('application/rss+xml')
+				res.send(feed.xml())
 			})
 		}
 	}

@@ -45,15 +45,15 @@ var nedb = require('nedb'),
 	accounts = new nedb({
 		filename: config.db.accounts,
 		autoload: true
-	})
+	}),
 	transactions = new nedb({
 		filename: config.db.transactions,
 		autoload: true
+	}),
+	history = new nedb({
+		filename: config.db.history,
+		autoload: true
 	})
-//	history = new nedb({
-//		filename: './db/history.db',
-//		autoload: true
-//	})
 
 users.ensureIndex({ 
 	fieldName: 'username', 
@@ -65,6 +65,7 @@ sessions.ensureIndex({
 	expireAfterSeconds: 900000
 })
 transactions.ensureIndex({ fieldName: 'owner' })
+history.ensureIndex({ fieldName: 'accountId' })
 
 var Validator = require('jsonschema').Validator,
 	validator = new Validator(),
@@ -75,7 +76,7 @@ validator.addSchema(schemas.user, '/user')
 var emailjs = require('emailjs'),
 	email = emailjs.server.connect(config.email_config)
 
-var helperController = HelperController(users, sessions, accounts, transactions, email)
+var helperController = HelperController(users, sessions, accounts, transactions, history, email)
 var signupController = SignupController(helperController, config, validator)
 var loginController = LoginController(helperController)
 var userController = UserController(helperController)
@@ -103,7 +104,8 @@ loginRoute.route('/')
 	.post(loginController.login)
 
 apiRoute.use(function (req, res, next) {
-	console.log('api call')
+	var remote = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	console.log(new Date()+'\t'+req.originalUrl+'\t'+remote)
 	next()
 })
 
@@ -123,6 +125,7 @@ apiRoute.post('/accounts/new', accountController.newAccount)
 apiRoute.post('/accounts/:acctId1/to/:acctId2', transactionController.addTransaction)
 apiRoute.get('/transactions', transactionController.getTransactions)
 apiRoute.delete('/transactions/:transid', transactionController.removeTransaction)
+apiRoute.get('/history/:acccountid', accountController.getHistory)
 
 app.use(config.http_root+'api', apiRoute) 
 app.use(config.http_root+'login', loginRoute) 

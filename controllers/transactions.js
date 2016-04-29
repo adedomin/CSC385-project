@@ -64,6 +64,16 @@ module.exports = function (transMan, helper) {
 				return
 			}
 
+			if (req.params.acctId1 === req.params.acctId2) {
+
+				res.status(500)
+				res.send({
+					status: 'error',
+					msg: 'accounts can\'t be the same'
+				})
+				return
+			}
+
 			if (!req.body.startAt) {
 				
 				req.body.startAt = 0

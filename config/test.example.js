@@ -46,7 +46,7 @@ config.db = {
 	sessions: './db/sessions.db',
 	accounts: './db/accounts.db',
 	transactions: './db/transactions.db',
-	history: './dbhistory.db'
+	history: './db/history.db'
 }
 
 module.exports = config
