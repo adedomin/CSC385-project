@@ -117,7 +117,8 @@ apiRoute.use(function (req, res, next) {
 		username: req.session.value,
 		postData: req.body,
 		reqUrl: req.originalUrl,
-		ip: remote
+		ip: remote,
+		date: new Date()
 	})
 	next()
 })
