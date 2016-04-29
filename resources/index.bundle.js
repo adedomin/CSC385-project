@@ -1,19 +1,3 @@
-/*
-Copyright 2016 Anthony DeDominic <dedominica@my.easternct.edu>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 "use strict";
 var window = require("global/window")
@@ -1403,13 +1387,27 @@ module.exports = [
 ]
 
 },{}],16:[function(require,module,exports){
+/*
+Copyright 2016 Anthony DeDominic <dedominica@my.easternct.edu>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 var yo = require('yo-yo'),
 	xhr = require('xhr')
 
 var displayAccounts,
-	selectedAccount = '',
-	transersFor,
-	historyFor
+	displayTransactions
 
 var elBody,
 	elBanner
@@ -1419,7 +1417,11 @@ var loggedin = true,
 	password = '',
 	newAccountName = '',
 	first = '',
-	last = ''
+	last = '',
+	fromAcct = '',
+	toAcct = '',
+	amount = '',
+	startAt = 0
 
 var changeUsername = function () {
 	username = this.value
@@ -1445,6 +1447,153 @@ var closeAlert = function () {
 
 	var closedBanner = renderBanner('')
 	yo.update(elBanner, closedBanner)
+}
+
+var changeFrom = function () {
+	fromAcct = this.value
+}
+
+var changeTo = function () {
+	toAcct = this.value
+}
+
+var changeAmount = function () {
+	amount = this.value
+}
+
+var changeStartAt = function () {
+	startAt = +(this.value)
+}
+
+var sendNewTransact = function () {
+	
+	xhr.post('/api/accounts/'+fromAcct+'/to/'+toAcct, {
+		body: JSON.stringify({
+			amount: amount,
+			startAt: startAt
+		}),
+		headers: {
+			'content-type': 'application/json'
+		},
+		withCredentials: true
+	},
+	function (err, resp, body) {
+		
+		body = JSON.parse(body)
+		if (err || !body || body.status === 'error') {
+			
+			newBanner = renderBanner('Invalid Transaction: '+body.msg, 'danger')
+			yo.update(elBanner, newBanner)
+			return
+		}
+
+		newBanner = renderBanner('Transaction Created', 'success')
+		yo.update(elBanner, newBanner)
+		update()
+	})
+}
+
+var cancelTrans = function () {
+
+	xhr.del('/api/transactions/'+this.id,{
+		withCredentials: true
+	},
+	function (err, resp, body) {
+		
+		if (err || !body || body.status === 'error') {
+
+			newBanner = renderBanner('Could not delete transaction: '+body.msg, 'danger')
+			yo.update(elBanner, newBanner)
+			return
+		}
+
+		newBanner = renderBanner('Transaction Deleted', 'success')
+		yo.update(elBanner, newBanner)
+		update()
+	})
+}
+
+
+var getTransactions = function (callback) {
+	
+	xhr.get('/api/transactions', {
+		withCredentials: true
+	},
+	function (err, resp, body) {
+		
+		body = JSON.parse(body)
+		if (err || !body || !body.transactions) {
+			
+			callback('can\'t get transactions')
+			return
+		}
+
+		callback(null, body.transactions)
+	})
+}
+
+var cancelNewTrans = function () {
+	var newBanner = renderBanner('Transaction Creation Cancelled', 'info')
+	yo.update(elBanner, newBanner)
+	update()
+}
+
+var renderNewTransacts = function (cancel, submit) {
+
+	toAcct = ''
+	fromAcct = ''
+	amount = ''
+	startAt = 0
+	return yo`<div class="container"><div class="col-md-4 col-md-offset-4">
+		<div class="form-group">
+		<label>From</label>
+		<select onchange=${changeFrom} class="form-control">
+		${displayAccounts.map(function (acct) {
+			if (!acct.balance) {
+				return
+			}
+
+			if (fromAcct === '') {
+				fromAcct = acct._id
+			}
+
+			return yo`<option value=${acct._id}>${acct._id}</option>`
+		})}	
+		</select>
+		</div>
+		<div class="form-group">
+		<label>To</label>
+		<select onchange=${changeTo} class="form-control">
+		${displayAccounts.map(function (acct) {
+			if (!acct.balance) {
+				return
+			}
+
+			if (toAcct === '') {
+				toAcct = acct._id
+			}
+
+			return yo`<option value=${acct._id}>${acct._id}</option>`
+		})}	
+		</select>
+		</div>
+		<div class="form-group">
+		<label>Amount (can be negative)</label>
+		<input type="text" class="form-control" onchange=${changeAmount}></input>
+		</div>
+		<div class="form-group">
+		<label>Delay</label>
+		<select class="form-control" onchange=${changeStartAt}>
+			<option value="0">Immediate</option>
+			<option value="3.6e+6">1 hour</option>
+			<option value="8.64e+7">1 day</option>
+			<option value="6.048e+8">1 week</option>
+			<option value="2147483647">24 days</option>
+		</select>
+		</div>
+		<button onclick=${cancel} class="btn btn-danger">cancel</button>
+		<button onclick=${submit} class="btn btn-info">submit</button>
+	</div></div>`
 }
 
 var newAccount = function () {
@@ -1594,43 +1743,79 @@ var renderSignUp = function (signUp, goBack) {
 	</div></div>`
 }
 
-var renderAccounts = function (accts, update, rowSelect, getTransactions) {
+var renderAccountSide = function (accts, rowSelect) {
+	
+	return yo`
+	<table class="table table-hover">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Account Id</th>
+			<th>Balance</th>
+		</tr>
+	</thead>
+	<tbody>
+	${accts.map(function (acct) {
+
+		if (!acct.balance) {
+			return
+		}
+
+		return yo`<tr id=${acct._id}>
+			<td>${acct.name}</td>
+			<td>${acct._id}</td>
+			<td>${acct.balance}</td>
+		</tr>`
+	})}
+		<tr id="account" class='warning' onclick=${rowSelect}>
+			<td>New Account</td>
+			<td></td>
+			<td></td>
+		</tr>
+	</tbody>
+	</table>`
+}
+
+var renderTransactionSide = function (transacts, rowSelect, cancelTrans) {
+	
+	return yo`
+	<table class="table table-hover">
+	<thead>
+		<tr>
+			<th>From</th>
+			<th>To</th>
+			<th>Amount</th>
+			<th>Cancel</th>
+		</tr>
+	</thead>
+	<tbody>
+	${transacts.map(function (trans) {
+
+		return yo`<tr>
+			<td>${trans.from}</td>
+			<td>${trans.to}</td>
+			<td>${trans.amount}</td>
+			<td id=${trans._id} onclick=${cancelTrans}>\u274C</td>
+		</tr>`
+	})}
+		<tr id="transacts" class='warning' onclick=${rowSelect}>
+			<td>New Transaction</td>
+			<td></td>
+			<td></td>
+			<td></td>
+		</tr>
+	</tbody>
+	</table>`
+}
+
+var renderAccounts = function (accts, trans, rowSelect, cancelTrans) {
 
 	return yo`<div class="container"><div class="row">
 		<div class="col-md-6">
-		<table class="table table-hover">
-			<thead>
-			<tr>
-				<th>Name</th>
-				<th>Account Id</th>
-				<th>Balance</th>
-			</tr>
-			</thead>
-			<tbody>
-			${accts.map(function (acct) {
-				var isSelected = ''
-				if (!acct.balance) {
-					return
-				}
-				if (acct._id === selectedAccount) {
-					isSelected = 'info'
-				}
-				return yo`<tr id=${acct._id} class=${isSelected} onclick=${rowSelect}>
-					<td>${acct.name}</td>
-					<td>${acct._id}</td>
-					<td>${acct.balance}</td>
-				</tr>`
-			})}
-			<tr id="new" class='warning' onclick=${rowSelect}>
-				<td>New Account</td>
-				<td></td>
-				<td></td>
-			</tr>
-		</tbody>
-		</table>
+			${renderAccountSide(accts, rowSelect)}
 		</div>
 		<div class="col-md-6">
-			<div><span>dfasf</span></div>
+			${renderTransactionSide(trans, rowSelect, cancelTrans)}
 		</div>
 	</div></div>`
 }
@@ -1668,16 +1853,17 @@ var getAccounts = function (callback) {
 
 var rowSelect = function () {
 
-	if (this.id === 'new') {
+	if (this.id === 'account') {
 		
 		var accountForm = renderNewAccount(cancelNewAccount, newAccount, changeNewAccountName)
 		yo.update(elBody, accountForm)
 		return
 	}
 
-	selectedAccount = this.id
-	var newRender = renderAccounts(displayAccounts, update, rowSelect)
-	yo.update(elBody, newRender)
+	if (this.id === 'transacts') {
+		var transactForm = renderNewTransacts(cancelNewTrans, sendNewTransact)
+		yo.update(elBody, transactForm)
+	}
 }
 
 var getLogin = function () {
@@ -1716,27 +1902,34 @@ var update = function () {
 	getAccounts(function (err, accounts) {
 
 		if (err) {
-
 			return
 		}
 
 		displayAccounts = accounts
-		var newRender = renderAccounts(displayAccounts, update, rowSelect)
-		yo.update(elBody, newRender)
+		getTransactions(function (err, transacts) {
+
+			if (err) {
+				displayTransactions = []
+			}
+			else {
+				displayTransactions = transacts
+			}
+
+			var newRender = renderAccounts(displayAccounts, displayTransactions, rowSelect, cancelTrans)
+			yo.update(elBody, newRender)
+		})
 	})
 }
 
 getAccounts(function (err, accounts) {
 	
+	elBody = yo`<div></div>`
 	if (err) {
-		
 		loggedin = false
 		elBody = renderLogin(update, getSignUp)
 	}
 	else {
-	
-		displayAccounts = accounts
-		elBody = renderAccounts(displayAccounts, update, rowSelect)
+		update()
 	}
 
 	elBanner = renderBanner('')

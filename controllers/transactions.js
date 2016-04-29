@@ -27,7 +27,9 @@ module.exports = function (transMan, helper) {
 			
 				if (err) {
 					
-					res.send({})
+					res.send({
+						transactions: []
+					})
 					return
 				}
 
@@ -48,6 +50,16 @@ module.exports = function (transMan, helper) {
 				res.send({
 					status: 'error',
 					msg: 'accounts not defined'
+				})
+				return
+			}
+
+			if (!(/^\d*\.?\d*$/.test(req.body.amount))) {
+				
+				res.status(500)
+				res.send({
+					status: 'error',
+					msg: 'illegal amount value'
 				})
 				return
 			}
