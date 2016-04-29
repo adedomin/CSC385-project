@@ -1565,15 +1565,16 @@ var renderNewTransacts = function (cancel, submit) {
 		<label>To</label>
 		<select onchange=${changeTo} class="form-control">
 		${displayAccounts.map(function (acct) {
-			if (!acct.balance) {
-				return
-			}
-
 			if (toAcct === '') {
 				toAcct = acct._id
 			}
 
-			return yo`<option value=${acct._id}>${acct._id}</option>`
+			if (!acct.balance) {
+				return yo`<option value=${acct._id}>${acct._id+' (not owned)'}</option>`
+			}
+			else {
+				return yo`<option value=${acct._id}>${acct._id}</option>`
+			}
 		})}	
 		</select>
 		</div>

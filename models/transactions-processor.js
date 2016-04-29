@@ -23,7 +23,7 @@ module.exports = function (helperController) {
 
 		var toAccount
 		var fromAccount
-		var changeAmt = new Decimal(ts.amount).toDP(2).toFixed(2)
+		var changeAmt = new Decimal(ts.amount).toDP(2)
 		var type = changeAmt.s
 
 		async.parallel([
@@ -63,9 +63,13 @@ module.exports = function (helperController) {
 				return
 			}
 
-			if (!toAccount.balance || type === -1) {
+			if (!toAccount.balance && type === -1) {
 				console.log('user does not have access to withdraw from the to account')
 				return
+			}
+			
+			if (!toAccount.balance) {
+				toAccount=accts[0]
 			}
 
 			helperController.transferAccountBalance(toAccount, fromAccount, changeAmt.toString(), function (err) {
