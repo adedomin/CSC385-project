@@ -1764,7 +1764,7 @@ var renderAccountSide = function (accts, rowSelect) {
 		return yo`<tr id=${acct._id}>
 			<td>${acct.name}</td>
 			<td>${acct._id}</td>
-			<td>${acct.balance}</td>
+			<td>${'$'+acct.balance}</td>
 		</tr>`
 	})}
 		<tr id="account" class='warning' onclick=${rowSelect}>
@@ -1782,24 +1782,27 @@ var renderTransactionSide = function (transacts, rowSelect, cancelTrans) {
 	<table class="table table-hover">
 	<thead>
 		<tr>
+			<th>Date</th>
 			<th>From</th>
 			<th>To</th>
 			<th>Amount</th>
-			<th>Cancel</th>
+			<th></th>
 		</tr>
 	</thead>
 	<tbody>
 	${transacts.map(function (trans) {
 
 		return yo`<tr>
+			<td>${new Date(trans.startAt)}</td>
 			<td>${trans.from}</td>
 			<td>${trans.to}</td>
-			<td>${trans.amount}</td>
-			<td id=${trans._id} onclick=${cancelTrans}>\u274C</td>
+			<td>${'$'+trans.amount}</td>
+			<td><button class="close" id=${trans._id} onclick=${cancelTrans}>\u274C</button></td>
 		</tr>`
 	})}
 		<tr id="transacts" class='warning' onclick=${rowSelect}>
 			<td>New Transaction</td>
+			<td></td>
 			<td></td>
 			<td></td>
 			<td></td>

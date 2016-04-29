@@ -108,7 +108,6 @@ apiRoute.use(function (req, res, next) {
 })
 
 apiRoute.use(loginController.verifyLogin)
-apiRoute.use(loginController.getRole)
 
 apiRoute.get('/testauth', function (req, res) {
 		res.send("you are auth'd :D")

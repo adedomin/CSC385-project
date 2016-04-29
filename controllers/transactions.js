@@ -54,7 +54,7 @@ module.exports = function (transMan, helper) {
 				return
 			}
 
-			if (!(/^\d*\.?\d*$/.test(req.body.amount))) {
+			if (!(/^\d*\.?\d{0,2}$/.test(req.body.amount))) {
 				
 				res.status(500)
 				res.send({
