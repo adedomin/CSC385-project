@@ -53,6 +53,10 @@ var nedb = require('nedb'),
 	history = new nedb({
 		filename: config.db.history,
 		autoload: true
+	}),
+	logging = new nedb({
+		filename: config.db.logging,
+		autoload: true
 	})
 
 users.ensureIndex({ 
@@ -66,6 +70,8 @@ sessions.ensureIndex({
 })
 transactions.ensureIndex({ fieldName: 'owner' })
 history.ensureIndex({ fieldName: 'accountId' })
+logging.ensureIndex({ fieldName: 'username' })
+logging.ensureIndex({ fieldName: 'ip' })
 
 var Validator = require('jsonschema').Validator,
 	validator = new Validator(),
@@ -103,13 +109,19 @@ loginRoute.route('/signup')
 loginRoute.route('/')
 	.post(loginController.login)
 
+apiRoute.use(loginController.verifyLogin)
 apiRoute.use(function (req, res, next) {
 	var remote = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-	console.log(new Date()+'\t'+req.originalUrl+'\t'+remote)
+
+	logging.insert({
+		username: req.session.value,
+		postData: req.body,
+		reqUrl: req.originalUrl,
+		ip: remote
+	})
 	next()
 })
 
-apiRoute.use(loginController.verifyLogin)
 
 apiRoute.get('/testauth', function (req, res) {
 		res.send("you are auth'd :D")
